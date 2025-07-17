@@ -1,7 +1,11 @@
-export default function App() {
+import ChatWindow from "./components/ChatWindow";
+
+function App() {
   return (
-    <h1 className="text-3xl font-bold underline text-blue-500">
-      Tailwind 動作確認
-    </h1>
+    <div className="p-4">
+      <ChatWindow />
+    </div>
   );
 }
+
+export default App;
