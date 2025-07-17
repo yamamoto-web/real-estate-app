@@ -29,7 +29,7 @@ def ask_chatgpt(question: str, history: list) -> str:
         )
 
         answer = response.choices[0].message.content
-
+        
         # 正規表現で「おすすめ地域: ...」を抽出
         match = re.search(r"おすすめ地域:\s*([^\n]+)", answer)
         recommended_area = match.group(1).strip() if match else "不明"
