@@ -41,33 +41,33 @@ def ask_chatgpt(question: str, history: list) -> str:
     except Exception as e:
         return f"エラーが発生しました: {e}"
     
-def get_final_recommendation(history: list) -> dict:
-    try:
-        messages = [{"role": "system", "content": (
-            "あなたは不動産アドバイザーです。"
-            "これまでのユーザとの会話履歴を踏まえて、最適な居住地域を3件まで提案してください。"
-            "回答は簡潔に、最後に必ず次の形式で出力してください："
-            "「おすすめ地域: ○○市, △△町, □□区」"
-        )}]
+# def get_final_recommendation(history: list) -> dict:
+#     try:
+#         messages = [{"role": "system", "content": (
+#             "あなたは不動産アドバイザーです。"
+#             "これまでのユーザとの会話履歴を踏まえて、最適な居住地域を3件まで提案してください。"
+#             "回答は簡潔に、最後に必ず次の形式で出力してください："
+#             "「おすすめ地域: ○○市, △△町, □□区」"
+#         )}]
 
-        for h in history:
-            messages.append({"role": "user", "content": h["question"]})
-            messages.append({"role": "assistant", "content": h["answer"]})
+#         for h in history:
+#             messages.append({"role": "user", "content": h["question"]})
+#             messages.append({"role": "assistant", "content": h["answer"]})
 
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=messages
-        )
+#         response = client.chat.completions.create(
+#             model="gpt-3.5-turbo",
+#             messages=messages
+#         )
 
-        final_answer = response.choices[0].message.content
+#         final_answer = response.choices[0].message.content
 
-        # ✅ 正規表現で地域部分を抽出
-        match = re.search(r"おすすめ地域:\s*([^\n]+)", final_answer)
-        recommended_area = match.group(1).strip() if match else "不明"
+#         # 正規表現で地域部分を抽出
+#         match = re.search(r"おすすめ地域:\s*([^\n]+)", final_answer)
+#         recommended_area = match.group(1).strip() if match else "不明"
 
-        return {
-            "answer": final_answer,
-            "recommended_area": recommended_area
-        }
-    except Exception as e:
-            return f"エラーが発生しました: {e}"
+#         return {
+#             "answer": final_answer,
+#             "recommended_area": recommended_area
+#         }
+#     except Exception as e:
+#             return f"エラーが発生しました: {e}"

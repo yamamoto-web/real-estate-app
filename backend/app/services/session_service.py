@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from app.services.chatgpt_service import ask_chatgpt
-from app.services.chatgpt_service import get_final_recommendation
+from app.services.get_final_recommendation import get_final_recommendation
 import uuid
 
 # メモリ上でセッション管理（将来DBに移行可能）
@@ -35,7 +35,7 @@ def get_session_result(session_id: str):
     
     return {
         "session_id": session_id,
-        "final_answer": final_result["answer"],
-        "recommended_area": final_result["recommended_area"],
+        "final_answer": final_result.answer,
+        "recommended_area": final_result.recommended_area,
         "history": history
     }
