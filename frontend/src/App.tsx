@@ -1,9 +1,9 @@
-import ChatWindow from "./components/ChatWindow";
+import Top from "./pages/Top/Top";
 
 function App() {
   return (
-    <div className="p-4">
-      <ChatWindow />
+    <div className="p-0">
+      <Top />
     </div>
   );
 }

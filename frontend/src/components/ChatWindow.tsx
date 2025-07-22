@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { startSession, sendQuestion, getResult } from "../api/sessionApi";
+import gendoSilhouette from "../assets/gendo-silhouette.png"; 
 
 export default function ChatWindow() {
   const [step, setStep] = useState(1);
@@ -39,61 +40,35 @@ export default function ChatWindow() {
     }
   };
 
-  return (
-    <div className="max-w-md mx-auto p-4 bg-white rounded shadow">
-      <h2 className="text-xl font-bold mb-4">不動産相談ステップ</h2>
+   return (
+    <div className="bg-[#F5F9FF] min-h-screen flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-md p-4 md:p-6 max-w-md w-full relative">
+        
+        {/* タイトル */}
+        <div className="absolute top-3 left-3 text-xl font-bold text-[#AEE1F9]">
+          まちマッチ
+        </div>
 
-      {step === 1 && (
-        <div>
-          <p className="mb-2">1. 住みたい地域を教えてください</p>
-          <input
-            type="text"
-            className="border rounded px-3 py-2 w-full"
-            value={area}
-            onChange={(e) => setArea(e.target.value)}
+        {/* ▼ 初期画面：ゲンドウ風相談役 */}
+        <div className="flex items-center mb-4 mt-10">
+          <img
+            src={gendoSilhouette}
+            alt="相談役"
+            className="w-16 h-16 rounded-full bg-gray-200 p-1"
           />
+          <div className="bg-[#AEE1F9] rounded-lg p-3 ml-2 text-gray-800 text-sm md:text-base">
+            フッ…お前に合う街を見つけてやろう
+          </div>
         </div>
-      )}
 
-      {step === 2 && (
-        <div>
-          <p className="mb-2">2. 希望予算を教えてください（万円）</p>
-          <input
-            type="text"
-            className="border rounded px-3 py-2 w-full"
-            value={budget}
-            onChange={(e) => setBudget(e.target.value)}
-          />
-        </div>
-      )}
-
-      {step === 3 && (
-        <div>
-          <p className="mb-2">3. 駅からの距離を教えてください（徒歩○分など）</p>
-          <input
-            type="text"
-            className="border rounded px-3 py-2 w-full"
-            value={distance}
-            onChange={(e) => setDistance(e.target.value)}
-          />
-        </div>
-      )}
-
-      {step === 4 && (
-        <div>
-          <p className="mb-2 font-semibold">4. 条件をまとめます</p>
-          <p>地域: {area}</p>
-          <p>予算: {budget} 万円</p>
-          <p>駅距離: {distance}</p>
-        </div>
-      )}
-
-      <button
-        onClick={handleNext}
-        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-      >
-        {step < 4 ? "次へ" : "相談結果を見る"}
-      </button>
+        {/* 仮のボタン部分 */}
+        <button
+          onClick={handleNext}
+          className="bg-[#B8E4C9] text-gray-700 rounded-full px-4 py-3 w-full text-sm md:text-base hover:opacity-90"
+        >
+          はじめる
+        </button>
+      </div>
     </div>
   );
 }
