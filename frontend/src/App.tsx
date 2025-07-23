@@ -1,10 +1,27 @@
 import Top from "./pages/Top/Top";
+import Stage from "./pages/Conditions/LifeStage";
+import Detail from "./pages/Conditions/Detail";
+import Result from "./pages/Result/Result";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 function App() {
   return (
-    <div className="p-0">
-      <Top />
-    </div>
+    <Router>
+      <div className="flex flex-col min-h-screen bg-gray-50">
+        <Header />
+        <main className="flex-grow max-w-md mx-auto w-full">
+          <Routes>
+            <Route path="/" element={<Top />} />
+            <Route path="/Conditions/Detail" element={<Detail />} />
+            <Route path="/Conditions/Stage" element={<Stage />} />
+            <Route path="/result" element={<Result />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
+    </Router>
   );
 }
 
