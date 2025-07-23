@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { startSession, sendQuestion, getResult } from "../../api/sessionApi";
 
 interface Message {
   role: "user" | "ai";
@@ -10,24 +11,59 @@ export default function Chat() {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [sessionId, setSessionId] = useState("");
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+  // ✅ 初回レンダリング時にセッション開始
+  useEffect(() => {
+    const initSession = async () => {
+      const id = await startSession();
+      console.log("Session started:", id);
+      setSessionId(id);
+
+      // 初期メッセージをAI役で表示
+      setMessages([
+        { role: "ai", text: "フッ…お前に合う街を見つけてやろう" },
+      ]);
+    };
+    initSession();
+  }, []);
+
+  const handleSend = async () => {
+    if (!input.trim() || !sessionId) return;
 
     // ✅ ユーザーの質問を履歴に追加
     const newMessage: Message = { role: "user", text: input };
     setMessages((prev) => [...prev, newMessage]);
 
-    // ✅ 仮のAI回答（後でAPI連携）
-    const aiReply: Message = {
-      role: "ai",
-      text: `なるほど、「${input}」ですね！`,
-    };
-    setTimeout(() => {
+    try {
+      // ✅ AIに質問送信 & 応答を受け取る
+      const aiResponse = await sendQuestion(sessionId, input);
+
+      // 返ってくるデータ構造が { answer: "～～" } なら以下
+      const aiReply: Message = { role: "ai", text: aiResponse.answer };
+
       setMessages((prev) => [...prev, aiReply]);
-    }, 500);
+    } catch (error) {
+      console.error("AI応答取得エラー:", error);
+      setMessages((prev) => [
+        ...prev,
+        { role: "ai", text: "すまん…今は答えられないようだ" },
+      ]);
+    }
 
     setInput("");
+  };
+
+  const handleResult = async () => {
+    if (!sessionId) return;
+    try {
+      const finalResult = await getResult(sessionId);
+      console.log("最終結果:", finalResult);
+      navigate("/Result", { state: { result: finalResult } });
+    } catch (error) {
+      console.error("結果取得エラー:", error);
+      alert("結果取得に失敗しました");
+    }
   };
 
   return (
@@ -71,7 +107,7 @@ export default function Chat() {
 
       {/* 結果画面へ */}
       <button
-        onClick={() => navigate("/Result")}
+        onClick={handleResult}
         className="mt-4 w-full bg-green-400 hover:bg-green-500
                    text-white text-lg font-bold rounded-lg py-3 shadow"
       >
