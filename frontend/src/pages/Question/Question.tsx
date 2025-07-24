@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { startSession, sendQuestion, getResult } from "../../api/sessionApi";
 
 interface Message {
@@ -9,35 +9,57 @@ interface Message {
 
 export default function Chat() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState("");
 
-  // ✅ 初回レンダリング時にセッション開始
-  useEffect(() => {
+  // 条件入力画面から受け取るデータ
+    const { area, budget, distance } = (location.state || {
+      area: "",
+      budget: "",
+      distance: "",
+    }) as { area: string; budget: string; distance: string };
+
+  // 初回レンダリング時にセッション開始
+    useEffect(() => {
     const initSession = async () => {
       const id = await startSession();
       console.log("Session started:", id);
       setSessionId(id);
 
-      // 初期メッセージをAI役で表示
       setMessages([
-        { role: "ai", text: "フッ…お前に合う街を見つけてやろう" },
+        {
+          role: "ai",
+          text: `フッ…お前に合う街を見つけてやろう。\n条件は「エリア:${area}、予算:${budget}万円、駅距離:${distance}分」だな？`,
+        },
       ]);
     };
     initSession();
-  }, []);
+  }, [area, budget, distance]);
 
   const handleSend = async () => {
     if (!input.trim() || !sessionId) return;
 
-    // ✅ ユーザーの質問を履歴に追加
+    // ユーザーの質問を履歴に追加
     const newMessage: Message = { role: "user", text: input };
     setMessages((prev) => [...prev, newMessage]);
 
     try {
-      // ✅ AIに質問送信 & 応答を受け取る
-      const aiResponse = await sendQuestion(sessionId, input);
+      // 条件を含めたプロンプトに変更
+      const prompt = `
+        これまでの条件:
+        - エリア: ${area}
+        - 予算: ${budget}万円
+        - 駅からの距離: ${distance}分
+
+        ユーザー質問: ${input}
+
+        上記条件を踏まえ、ユーザーに最適な街の候補を1つ挙げ、理由を簡潔に答えてください。
+      `;
+
+      // AIに質問送信 & 応答を受け取る
+      const aiResponse = await sendQuestion(sessionId, prompt);
 
       // 返ってくるデータ構造が { answer: "～～" } なら以下
       const aiReply: Message = { role: "ai", text: aiResponse.answer };
