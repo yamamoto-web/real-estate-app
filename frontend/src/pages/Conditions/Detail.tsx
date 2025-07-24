@@ -1,133 +1,138 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function Conditions() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const stage = params.get("stage"); // ライフステージ
 
-  // ✅ 仮のstate（後でAPI連携時に整理）
-  const [formData, setFormData] = useState({
-    age: "",
-    gender: "",
-    prefecture: "",
-    station: "",
-    commuteTime: "",
-    budget: "",
-    priority1: "",
-    priority2: "",
-    priority3: "",
-  });
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("");
+  const [area, setArea] = useState("");
+  const [time, setTime] = useState("");
+  const [budget, setBudget] = useState("");
+  const [priority, setPriority] = useState<string[]>([]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handlePrioritySelect = (item: string) => {
+    if (priority.includes(item)) {
+      setPriority(priority.filter((i) => i !== item));
+    } else if (priority.length < 3) {
+      setPriority([...priority, item]);
+    } else {
+      alert("選べるのは最大3件までです");
+    }
   };
 
-  const handleSubmit = () => {
-    console.log("入力内容:", formData);
-    navigate("/Question"); // ✅ 結果画面へ遷移
+  const handleNext = () => {
+    if (!age || !area || !time || !budget || priority.length === 0) {
+      alert("必須項目をすべて選択してください");
+      return;
+    }
+    navigate(
+      `/Question?stage=${stage}&age=${age}&gender=${gender}&area=${area}&time=${time}&budget=${budget}&priority=${priority.join(",")}`
+    );
   };
+
+  const renderButtons = (
+    options: string[],
+    selected: string,
+    setSelected: (value: string) => void
+  ) =>
+    options.map((opt) => (
+      <button
+        key={opt}
+        onClick={() => setSelected(opt)}
+        className={`px-4 py-2 rounded-lg border transition ${
+          selected === opt
+            ? "bg-green-400 text-white"
+            : "bg-white border-gray-300 hover:bg-green-50"
+        }`}
+      >
+        {opt}
+      </button>
+    ));
 
   return (
-    <main className="min-h-screen w-full max-w-md mx-auto p-4 space-y-4">
-      <h2 className="text-xl font-bold text-gray-800">詳細条件を入力してください</h2>
+    <main className="min-h-screen max-w-md mx-auto p-4">
+      <h2 className="text-lg font-bold text-gray-800 text-center mt-4 mb-6">
+        あなたの条件を教えてください
+      </h2>
+      <p className="text-sm text-gray-500 text-center mb-4">
+        （ライフステージ：{stage}）
+      </p>
 
-      {/* 年齢・性別 */}
-      <div className="flex space-x-2">
-        <input
-          type="number"
-          name="age"
-          value={formData.age}
-          onChange={handleChange}
-          placeholder="年齢"
-          className="flex-1 border rounded p-2"
-        />
-        <select
-          name="gender"
-          value={formData.gender}
-          onChange={handleChange}
-          className="flex-1 border rounded p-2"
-        >
-          <option value="">性別</option>
-          <option value="male">男性</option>
-          <option value="female">女性</option>
-        </select>
+      {/* 年齢 */}
+      <div className="mb-4">
+        <h3 className="font-semibold mb-2">年齢</h3>
+        <div className="flex gap-2 flex-wrap">
+          {renderButtons(["10代", "20代", "30代", "40代以上"], age, setAge)}
+        </div>
       </div>
 
-      {/* 都道府県・エリア */}
-      <input
-        type="text"
-        name="prefecture"
-        value={formData.prefecture}
-        onChange={handleChange}
-        placeholder="都道府県 / エリア"
-        className="w-full border rounded p-2"
-      />
+      {/* 性別 */}
+      <div className="mb-4">
+        <h3 className="font-semibold mb-2">性別（任意）</h3>
+        <div className="flex gap-2 flex-wrap">
+          {renderButtons(["男性", "女性", "選択しない"], gender, setGender)}
+        </div>
+      </div>
 
-      {/* 最寄り駅・エリア */}
-      <input
-        type="text"
-        name="station"
-        value={formData.station}
-        onChange={handleChange}
-        placeholder="通勤/通学 最寄り駅・エリア"
-        className="w-full border rounded p-2"
-      />
+      {/* エリア */}
+      <div className="mb-4">
+        <h3 className="font-semibold mb-2">勤務・生活エリア</h3>
+        <div className="flex gap-2 flex-wrap">
+          {renderButtons(
+            ["東京23区", "東京都下", "神奈川東部", "千葉・埼玉"],
+            area,
+            setArea
+          )}
+        </div>
+      </div>
 
       {/* 通勤時間 */}
-      <input
-        type="text"
-        name="commuteTime"
-        value={formData.commuteTime}
-        onChange={handleChange}
-        placeholder="通勤/通学時間 (例:30分)"
-        className="w-full border rounded p-2"
-      />
-
-      {/* 予算 */}
-      <input
-        type="number"
-        name="budget"
-        value={formData.budget}
-        onChange={handleChange}
-        placeholder="予算 (円)"
-        className="w-full border rounded p-2"
-      />
-
-      {/* 上位3件優先項目 */}
-      <div className="space-y-2">
-        <p className="text-sm text-gray-600">上位3件優先項目（必須）</p>
-        <input
-          type="text"
-          name="priority1"
-          value={formData.priority1}
-          onChange={handleChange}
-          placeholder="1位"
-          className="w-full border rounded p-2"
-        />
-        <input
-          type="text"
-          name="priority2"
-          value={formData.priority2}
-          onChange={handleChange}
-          placeholder="2位"
-          className="w-full border rounded p-2"
-        />
-        <input
-          type="text"
-          name="priority3"
-          value={formData.priority3}
-          onChange={handleChange}
-          placeholder="3位"
-          className="w-full border rounded p-2"
-        />
+      <div className="mb-4">
+        <h3 className="font-semibold mb-2">通勤・通学時間</h3>
+        <div className="flex gap-2 flex-wrap">
+          {renderButtons(["15分以内", "30分以内", "1時間以内"], time, setTime)}
+        </div>
       </div>
 
-      {/* 決定ボタン */}
+      {/* 予算 */}
+      <div className="mb-4">
+        <h3 className="font-semibold mb-2">予算</h3>
+        <div className="flex gap-2 flex-wrap">
+          {renderButtons(["5万円台", "7万円台", "10万円以上"], budget, setBudget)}
+        </div>
+      </div>
+
+      {/* 優先条件 */}
+      <div className="mb-4">
+        <h3 className="font-semibold mb-2">上位3件優先条件（必須）</h3>
+        <div className="flex gap-2 flex-wrap">
+          {["駅近", "スーパーが近い", "治安が良い", "家賃が安い", "自然が多い"].map(
+            (opt) => (
+              <button
+                key={opt}
+                onClick={() => handlePrioritySelect(opt)}
+                className={`px-4 py-2 rounded-lg border transition ${
+                  priority.includes(opt)
+                    ? "bg-green-400 text-white"
+                    : "bg-white border-gray-300 hover:bg-green-50"
+                }`}
+              >
+                {opt}
+              </button>
+            )
+          )}
+        </div>
+      </div>
+
       <button
-        onClick={handleSubmit}
-        className="w-full bg-green-400 hover:bg-green-500
-                   text-white text-lg font-bold rounded-lg py-3 shadow"
+        onClick={handleNext}
+        className="mt-6 w-full bg-green-400 hover:bg-green-500 text-white font-bold rounded-lg py-3"
       >
-        AIに相談する
+        次へ進む
       </button>
     </main>
   );
