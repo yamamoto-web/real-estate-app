@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 export default function Conditions() {
@@ -102,7 +102,7 @@ export default function Conditions() {
       <div className="mb-4">
         <h3 className="font-semibold mb-2">予算</h3>
         <div className="flex gap-2 flex-wrap">
-          {renderButtons(["5万円台", "7万円台", "10万円以上"], budget, setBudget)}
+          {renderButtons(["5万円台","6万円台", "7万円台", "10万円以上"], budget, setBudget)}
         </div>
       </div>
 

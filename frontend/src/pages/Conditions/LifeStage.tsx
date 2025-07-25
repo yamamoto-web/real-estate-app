@@ -1,4 +1,3 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
 
 const stages = [
@@ -24,7 +23,7 @@ export default function LifeStage() {
         あなたの現在のライフステージを教えてください
       </h2>
 
-      {/* ✅ 上6つはグリッド */}
+      {/* 上6つはグリッド */}
       <div className="grid grid-cols-2 gap-4 w-full">
         {stages.slice(0, 6).map((stage) => (
           <div key={stage.id} className="flex flex-col items-center">
@@ -40,7 +39,7 @@ export default function LifeStage() {
         ))}
       </div>
 
-      {/* ✅ その他はコンパクトに中央寄せ */}
+      {/* その他はコンパクトに中央寄せ */}
       <div className="mt-4 flex justify-center">
         <div className="flex flex-col items-center">
           <button
