@@ -21,3 +21,12 @@ class ResultResponse(BaseModel):
     final_answer: str
     recommended_area: str
     history: List[HistoryItem]
+
+class Answer(BaseModel):
+    stage: str
+    age: str = ""
+    gender: str = ""
+    area: str = ""
+    time: str = ""
+    budget: str = ""
+    priority: List[str] = []

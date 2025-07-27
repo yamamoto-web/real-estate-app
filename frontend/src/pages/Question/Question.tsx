@@ -1,108 +1,151 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { startSession, sendQuestion, getResult } from "../../api/sessionApi";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
-interface Message {
-  role: "user" | "ai";
+interface Question {
+  id: string;
   text: string;
+  options: string[];
 }
 
-export default function Chat() {
+interface ResultResponse {
+  recommended_area: string[];
+  scores: Record<string, number>;
+}
+
+interface FinalResultResponse {
+  recommended_area: string[];
+  scores: Record<string, number>;
+  comment: string;
+}
+
+export default function ChatQA() {
+  const [messages, setMessages] = useState<{ role: "ai" | "user"; text: string }[]>([]);
+  const [currentQ, setCurrentQ] = useState<number>(0);
+  const [answers, setAnswers] = useState<{ [key: string]: string }>({});
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [sessionId, setSessionId] = useState("");
 
-  // 条件入力画面から受け取るデータ
-    const { area, budget, distance } = (location.state || {
-      area: "",
-      budget: "",
-      distance: "",
-    }) as { area: string; budget: string; distance: string };
+  const questions: Question[] = [
+    {
+      id: "q1",
+      text: "夜疲れて帰ってきたときに、コンビニやスーパーが近いほうがいいですか？",
+      options: ["はい", "どちらでもよい", "いいえ"],
+    },
+    {
+      id: "q2",
+      text: "多少家賃が高くても駅近を選びますか？",
+      options: ["はい", "どちらでもよい", "いいえ"],
+    },
+  ];
 
-  // 初回レンダリング時にセッション開始
-    useEffect(() => {
-    const initSession = async () => {
-      const id = await startSession();
-      console.log("Session started:", id);
-      setSessionId(id);
+  useEffect(() => {
+    const intro =
+      "ライフステージ「就職・転職」に合わせた街選びをしますね。\nこれからいくつか質問させてください！";
+    setMessages([{ role: "ai", text: intro }]);
+  }, []);
 
-      setMessages([
-        {
-          role: "ai",
-          text: `フッ…お前に合う街を見つけてやろう。\n条件は「エリア:${area}、予算:${budget}万円、駅距離:${distance}分」だな？`,
-        },
-      ]);
-    };
-    initSession();
-  }, [area, budget, distance]);
+  const handleAnswer = (answer: string) => {
+    const q = questions[currentQ];
+    setAnswers({ ...answers, [q.id]: answer });
 
-  const handleSend = async () => {
-    if (!input.trim() || !sessionId) return;
+    setMessages((prev) => [...prev, { role: "user", text: answer }]);
 
-    // ユーザーの質問を履歴に追加
-    const newMessage: Message = { role: "user", text: input };
-    setMessages((prev) => [...prev, newMessage]);
-
-    try {
-      // 条件を含めたプロンプトに変更
-      const prompt = `
-        これまでの条件:
-        - エリア: ${area}
-        - 予算: ${budget}万円
-        - 駅からの距離: ${distance}分
-
-        ユーザー質問: ${input}
-
-        上記条件を踏まえ、ユーザーに最適な街の候補を1つ挙げ、理由を簡潔に答えてください。
-      `;
-
-      // AIに質問送信 & 応答を受け取る
-      const aiResponse = await sendQuestion(sessionId, prompt);
-
-      // 返ってくるデータ構造が { answer: "～～" } なら以下
-      const aiReply: Message = { role: "ai", text: aiResponse.answer };
-
-      setMessages((prev) => [...prev, aiReply]);
-    } catch (error) {
-      console.error("AI応答取得エラー:", error);
-      setMessages((prev) => [
-        ...prev,
-        { role: "ai", text: "すまん…今は答えられないようだ" },
-      ]);
+    if (currentQ + 1 < questions.length) {
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          { role: "ai", text: questions[currentQ + 1].text },
+        ]);
+      }, 500);
+      setCurrentQ(currentQ + 1);
+    } else {
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          { role: "ai", text: "これでヒアリングは完了です。途中結果を見ますか？" },
+        ]);
+      }, 500);
+        // 質問終了後に+1して終了状態にする
+        setCurrentQ(currentQ + 1);
     }
-
-    setInput("");
   };
 
-  const handleResult = async () => {
-    if (!sessionId) return;
+  const handleShowResult = async () => {
+    setLoading(true);
     try {
-      const finalResult = await getResult(sessionId);
-      console.log("最終結果:", finalResult);
-      navigate("/Result", { state: { result: finalResult } });
+      const response = await axios.post<ResultResponse>(
+        "http://127.0.0.1:8000/v1/result/result",
+        {
+          stage: "job",
+          age: "20代",
+          gender: "男性",
+          area: "東京23区",
+          time: "30分以内",
+          budget: "7万円台",
+          priority: Object.values(answers),
+        }
+      );
+      const recommended = response.data.recommended_area.slice(0, 3).join("、");
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "ai",
+          text: `現時点でおすすめの地域は「${recommended}」です！`,
+        },
+      ]);
     } catch (error) {
       console.error("結果取得エラー:", error);
-      alert("結果取得に失敗しました");
+      setMessages((prev) => [
+        ...prev,
+        { role: "ai", text: "結果取得に失敗しました…" },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFinalResult = async () => {
+    try {
+      const response = await axios.post<FinalResultResponse>(
+        "http://127.0.0.1:8000/v1/final_result",
+        {
+          stage: "job",
+          age: "20代",
+          gender: "男性",
+          area: "東京23区",
+          time: "30分以内",
+          budget: "7万円台",
+          priority: Object.values(answers),
+        }
+      );
+
+      navigate("/result", {
+        state: {
+          recommended_area: response.data.recommended_area,
+          comment: response.data.comment,
+        },
+      });
+    } catch (error) {
+      console.error("最終結果取得エラー:", error);
     }
   };
 
   return (
-    <main className="min-h-screen flex flex-col w-full max-w-md mx-auto p-4">
+    <main className="min-h-screen max-w-md mx-auto p-4">
       <h2 className="text-lg font-bold text-gray-800 text-center mb-4">
-        AIと相談してみましょう
+        AI相談
       </h2>
 
-      {/* チャット履歴エリア */}
-      <div className="flex-1 overflow-y-auto space-y-2 mb-4 border rounded p-2 bg-gray-50">
-        {messages.map((msg, index) => (
+      {/* チャット履歴 */}
+      <div className="space-y-2 border rounded p-2 mb-4 bg-gray-50 h-80 overflow-y-auto">
+        {messages.map((msg, idx) => (
           <div
-            key={index}
+            key={idx}
             className={`p-2 rounded-lg max-w-[80%] ${
-              msg.role === "user"
-                ? "bg-green-100 text-right ml-auto"
-                : "bg-white text-left"
+              msg.role === "ai"
+                ? "bg-white text-left"
+                : "bg-green-100 text-right ml-auto"
             }`}
           >
             {msg.text}
@@ -110,31 +153,39 @@ export default function Chat() {
         ))}
       </div>
 
-      {/* 入力フォーム */}
-      <div className="flex space-x-2">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="質問を入力"
-          className="flex-1 border rounded p-2"
-        />
-        <button
-          onClick={handleSend}
-          className="bg-green-400 hover:bg-green-500 text-white font-bold rounded px-4"
-        >
-          送信
-        </button>
-      </div>
+      {/* 質問選択肢 */}
+      {currentQ < questions.length && (
+        <div className="flex gap-2 flex-wrap">
+          {questions[currentQ].options.map((opt) => (
+            <button
+              key={opt}
+              onClick={() => handleAnswer(opt)}
+              className="px-4 py-2 rounded-lg border bg-white hover:bg-green-50"
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
 
-      {/* 結果画面へ */}
+      {/* 途中結果ボタン */}
       <button
-        onClick={handleResult}
-        className="mt-4 w-full bg-green-400 hover:bg-green-500
-                   text-white text-lg font-bold rounded-lg py-3 shadow"
+        onClick={handleShowResult}
+        disabled={loading}
+        className="mt-4 w-full bg-green-400 hover:bg-green-500 text-white font-bold rounded-lg py-2"
       >
-        結果を見る
+        {loading ? "計算中..." : "現時点の結果を見る"}
       </button>
+
+      {/* 最終結果ボタン */}
+      {currentQ >= questions.length && (
+        <button
+          onClick={handleFinalResult}
+          className="mt-2 w-full bg-blue-400 hover:bg-blue-500 text-white font-bold rounded-lg py-2"
+        >
+          最終結果を見る
+        </button>
+      )}
     </main>
   );
 }
