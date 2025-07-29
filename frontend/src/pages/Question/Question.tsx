@@ -55,7 +55,6 @@ export default function ChatQA() {
       options: ["はい", "どちらでもよい", "いいえ"],
     },
   ];
-  console.log("stageLabel:", stageLabel);
   useEffect(() => {
   const fetchIntro = async () => {
     try {
@@ -172,6 +171,9 @@ export default function ChatQA() {
       <h2 className="text-lg font-bold text-gray-800 text-center mb-4">
         AI相談
       </h2>
+      <p className="text-sm text-gray-500 text-center mb-4">
+        （ライフステージ：{stageLabel}）
+      </p>
 
       {/* チャット履歴 */}
       <div className="space-y-2 border rounded p-2 mb-4 bg-gray-50 h-80 overflow-y-auto">
