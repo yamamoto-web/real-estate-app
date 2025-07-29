@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 class SessionStartResponse(BaseModel):
     session_id: str
@@ -24,6 +24,16 @@ class ResultResponse(BaseModel):
 
 class Answer(BaseModel):
     stage: str
+    age: str = ""
+    gender: str = ""
+    area: str = ""
+    time: str = ""
+    budget: str = ""
+    priority: List[str] = []
+
+class IntroRequest(BaseModel):
+    stage: str
+    stageLabel: Optional[str] = None
     age: str = ""
     gender: str = ""
     area: str = ""

@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { getStageLabelById } from "@common/stageUtils";
 
 export default function Conditions() {
   const navigate = useNavigate();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  const stage = params.get("stage"); // ライフステージ
+  const stage = params.get("stage") ?? "";
 
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
@@ -13,6 +14,7 @@ export default function Conditions() {
   const [time, setTime] = useState("");
   const [budget, setBudget] = useState("");
   const [priority, setPriority] = useState<string[]>([]);
+  const stageLabel = getStageLabelById(stage);
 
   const handlePrioritySelect = (item: string) => {
     if (priority.includes(item)) {
@@ -59,7 +61,7 @@ export default function Conditions() {
         あなたの条件を教えてください
       </h2>
       <p className="text-sm text-gray-500 text-center mb-4">
-        （ライフステージ：{stage}）
+        （ライフステージ：{stageLabel}）
       </p>
 
       {/* 年齢 */}

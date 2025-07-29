@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { getStageLabelById } from "@common/stageUtils";
 import axios from "axios";
 
 interface Question {
@@ -19,12 +21,27 @@ interface FinalResultResponse {
   comment: string;
 }
 
+interface IntroResponse {
+  intro: string;
+}
+
 export default function ChatQA() {
   const [messages, setMessages] = useState<{ role: "ai" | "user"; text: string }[]>([]);
   const [currentQ, setCurrentQ] = useState<number>(0);
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+
+  // URLのParamの取得(可読性が下がるため今後対応)
+  const stage = searchParams.get("stage") ?? "";
+  const age = searchParams.get("age");
+  const gender = searchParams.get("gender");
+  const budget = searchParams.get("budget");
+  const time = searchParams.get("time");
+  const priority = searchParams.get("priority")?.split(","); // カンマ区切り配列
+  const stageLabel = getStageLabelById(stage); 
 
   const questions: Question[] = [
     {
@@ -38,12 +55,31 @@ export default function ChatQA() {
       options: ["はい", "どちらでもよい", "いいえ"],
     },
   ];
-
+  console.log("stageLabel:", stageLabel);
   useEffect(() => {
-    const intro =
-      "ライフステージ「就職・転職」に合わせた街選びをしますね。\nこれからいくつか質問させてください！";
-    setMessages([{ role: "ai", text: intro }]);
-  }, []);
+  const fetchIntro = async () => {
+    try {
+      const response = await axios.post<IntroResponse>("http://127.0.0.1:8000/v1/chat_intro", {
+        stage,
+        stageLabel,
+        age,
+        gender,
+        budget,
+        time,
+        priority,    
+      });
+      setMessages([{ role: "ai", text: response.data.intro }]);
+    } catch {
+      setMessages([
+        {
+          role: "ai",
+          text: `ライフステージ「${stage}」に合わせた街選びをしますね。\nこれからいくつか質問させてください！`,
+        },
+      ]);
+    }
+  };
+  fetchIntro();
+}, []);
 
   const handleAnswer = (answer: string) => {
     const q = questions[currentQ];
