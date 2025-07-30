@@ -16,11 +16,8 @@ def root():
 
 app.add_middleware(
     CORSMiddleware,
-     allow_origins=[
-        "http://localhost:5173",  # ローカル開発用
-        "https://real-estate-app-zeta-eight.vercel.app"  # ← 実機確認用URL
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,  # *を使うとTrueは使えない
     allow_methods=["*"],
     allow_headers=["*"],
 )
