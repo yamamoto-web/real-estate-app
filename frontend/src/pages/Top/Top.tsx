@@ -16,22 +16,17 @@ export default function Top() {
   }, []);
   return (
     <main className="flex flex-col items-center justify-center w-full max-w-md mx-auto text-center space-y-6 min-h-[calc(100vh-120px)]">
-      <h2 className="text-3xl font-bold text-gray-800 leading-snug">
-      <span className="block">
-        <span className="text-green-500">街</span>が変われば、
-        <span className="text-green-500">暮らし</span>が変わる
-      </span>
-      <span className="block">
-        <span className="text-green-500">暮らし</span>が変われば、
-        <span className="text-green-500">人生</span>が変わる
-      </span>
+      <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 leading-relaxed text-center">
+        <span className="block">
+          <span className="text-green-500">街</span>が変われば、<span className="text-green-500">暮らし</span>が変わる
+        </span>
+        <span className="block mt-1">
+          <span className="text-green-500">暮らし</span>が変われば、<span className="text-green-500">人生</span>が変わる
+        </span>
       </h2>
-      <p className="text-base text-gray-500">
-        あなたにぴったりの街をAIが提案します
-      </p>
 
-      <div className="bg-white shadow-sm rounded-lg px-4 py-2 text-gray-700 text-sm max-w-sm">
-        ※AIがあなたのライフステージに合う街を提案します
+      <div className="mt-2 mb-4 text-sm text-gray-500 text-center">
+      ※AIがあなたのライフステージに合う街を提案します
       </div>
 
       <button
