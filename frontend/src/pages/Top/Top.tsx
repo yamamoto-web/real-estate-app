@@ -15,7 +15,10 @@ export default function Top() {
     return () => window.removeEventListener("resize", setVh);
   }, []);
   return (
-    <main className="flex flex-col items-center justify-center w-full max-w-md mx-auto text-center space-y-6 min-h-[calc(100vh-120px)]">
+    <main
+      className="flex flex-col items-center justify-center w-full max-w-md mx-auto text-center space-y-6"
+      style={{ height: "calc(var(--vh, 1vh) * 100)" }}
+      >
       <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 leading-relaxed text-center">
         <span className="block">
           <span className="text-green-500">街</span>が変われば、<span className="text-green-500">暮らし</span>が変わる
