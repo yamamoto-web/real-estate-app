@@ -30,6 +30,7 @@ export default function ChatQA() {
   const time = searchParams.get("time");
   const priority = searchParams.get("priority")?.split(","); // カンマ区切り配列
   const stageLabel = getStageLabelById(stage); 
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   const questions: Question[] = [
     {
@@ -46,7 +47,7 @@ export default function ChatQA() {
   useEffect(() => {
   const fetchIntro = async () => {
     try {
-      const response = await axios.post<IntroResponse>("http://127.0.0.1:8000/v1/chat_intro", {
+      const response = await axios.post<IntroResponse>(`${apiUrl}/v1/chat_intro`, {
         stage,
         stageLabel,
         age,
@@ -96,7 +97,7 @@ export default function ChatQA() {
 
   const handleFinalResult = async () => {
      try {
-    const response = await axios.post("http://127.0.0.1:8000/v1/result", {
+    const response = await axios.post(`${apiUrl}/v1/result`, {
       stage,
       stageLabel,
       age,
