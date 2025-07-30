@@ -12,7 +12,7 @@ function App() {
     <Router>
       <div className="flex flex-col min-h-screen bg-gray-50">
         <Header />
-        <main className="flex-grow max-w-md mx-auto w-full">
+        <main className="flex-1 max-w-md mx-auto w-full">
           <Routes>
             <Route path="/" element={<Top />} />
             <Route path="/Conditions/Detail" element={<Detail />} />
