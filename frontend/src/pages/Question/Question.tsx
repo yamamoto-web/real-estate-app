@@ -10,17 +10,6 @@ interface Question {
   options: string[];
 }
 
-interface ResultResponse {
-  recommended_area: string[];
-  scores: Record<string, number>;
-}
-
-interface FinalResultResponse {
-  recommended_area: string[];
-  scores: Record<string, number>;
-  comment: string;
-}
-
 interface IntroResponse {
   intro: string;
 }
@@ -29,7 +18,6 @@ export default function ChatQA() {
   const [messages, setMessages] = useState<{ role: "ai" | "user"; text: string }[]>([]);
   const [currentQ, setCurrentQ] = useState<number>(0);
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -98,7 +86,7 @@ export default function ChatQA() {
       setTimeout(() => {
         setMessages((prev) => [
           ...prev,
-          { role: "ai", text: "これでヒアリングは完了です。途中結果を見ますか？" },
+          { role: "ai", text: "お疲れ様でした。これでヒアリングは完了です。" },
         ]);
       }, 500);
         // 質問終了後に+1して終了状態にする
@@ -106,63 +94,20 @@ export default function ChatQA() {
     }
   };
 
-  const handleShowResult = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.post<ResultResponse>(
-        "http://127.0.0.1:8000/v1/result/result",
-        {
-          stage: "job",
-          age: "20代",
-          gender: "男性",
-          area: "東京23区",
-          time: "30分以内",
-          budget: "7万円台",
-          priority: Object.values(answers),
-        }
-      );
-      const recommended = response.data.recommended_area.slice(0, 3).join("、");
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "ai",
-          text: `現時点でおすすめの地域は「${recommended}」です！`,
-        },
-      ]);
-    } catch (error) {
-      console.error("結果取得エラー:", error);
-      setMessages((prev) => [
-        ...prev,
-        { role: "ai", text: "結果取得に失敗しました…" },
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleFinalResult = async () => {
-    try {
-      const response = await axios.post<FinalResultResponse>(
-        "http://127.0.0.1:8000/v1/final_result",
-        {
-          stage: "job",
-          age: "20代",
-          gender: "男性",
-          area: "東京23区",
-          time: "30分以内",
-          budget: "7万円台",
-          priority: Object.values(answers),
-        }
-      );
-
-      navigate("/result", {
-        state: {
-          recommended_area: response.data.recommended_area,
-          comment: response.data.comment,
-        },
-      });
+     try {
+    const response = await axios.post("http://127.0.0.1:8000/v1/result", {
+      stage,
+      stageLabel,
+      age,
+      gender,
+      budget,
+      time,
+      priority,
+    });
+    navigate("/Result", { state: response.data });
     } catch (error) {
-      console.error("最終結果取得エラー:", error);
+      console.error("最終結果取得エラー: ", error);
     }
   };
 
@@ -176,7 +121,7 @@ export default function ChatQA() {
       </p>
 
       {/* チャット履歴 */}
-      <div className="space-y-2 border rounded p-2 mb-4 bg-gray-50 h-80 overflow-y-auto">
+      <div className="space-y-2 border rounded p-2 mb-4 bg-gray-50 h-[60vh] overflow-y-auto">
         {messages.map((msg, idx) => (
           <div
             key={idx}
@@ -185,7 +130,7 @@ export default function ChatQA() {
                 ? "bg-white text-left"
                 : "bg-green-100 text-right ml-auto"
             }`}
-          >
+            >
             {msg.text}
           </div>
         ))}
@@ -206,22 +151,13 @@ export default function ChatQA() {
         </div>
       )}
 
-      {/* 途中結果ボタン */}
-      <button
-        onClick={handleShowResult}
-        disabled={loading}
-        className="mt-4 w-full bg-green-400 hover:bg-green-500 text-white font-bold rounded-lg py-2"
-      >
-        {loading ? "計算中..." : "現時点の結果を見る"}
-      </button>
-
       {/* 最終結果ボタン */}
       {currentQ >= questions.length && (
         <button
           onClick={handleFinalResult}
           className="mt-2 w-full bg-blue-400 hover:bg-blue-500 text-white font-bold rounded-lg py-2"
         >
-          最終結果を見る
+          相談結果を見る
         </button>
       )}
     </main>

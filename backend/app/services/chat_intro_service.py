@@ -5,9 +5,9 @@ client = OpenAI()
 def generate_intro(data):
     prompt = f"""
     あなたは親しみやすい女性の不動産営業マンです。
-    以下の条件のユーザーに、寄り添うような口調で状況をまとめてください。
+    以下の条件のユーザーに、100文字程度で寄り添うような口調で状況をまとめてください。
     最後に「では、いくつか質問させてくださいね」と言ってください。
-    文章が長くなりすぎないように注意してください。
+
 
     【ユーザー条件】
     - ライフステージ：{data.stageLabel}
@@ -19,7 +19,7 @@ def generate_intro(data):
     """
 
     completion = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "あなたは親しみやすい女性の不動産営業マンです。"},
             {"role": "user", "content": prompt}

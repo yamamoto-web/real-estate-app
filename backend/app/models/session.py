@@ -24,6 +24,7 @@ class ResultResponse(BaseModel):
 
 class Answer(BaseModel):
     stage: str
+    stageLabel: Optional[str] = None
     age: str = ""
     gender: str = ""
     area: str = ""
