@@ -13,9 +13,9 @@ export default function Header() {
       </div>
 
       {/* 右側：ハンバーガーメニュー */}
-      <button className="p-2 rounded hover:bg-gray-100">
+      {/* <button className="p-2 rounded hover:bg-gray-100">
         <Bars3Icon className="h-6 w-6 text-gray-700" />
-      </button>
+      </button> */}
     </header>
   );
 }
