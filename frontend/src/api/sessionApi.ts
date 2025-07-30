@@ -1,6 +1,7 @@
 import axios from "axios";
+const apiUrl = import.meta.env.VITE_API_URL;
 
-const API_BASE = "http://127.0.0.1:8000/v1/session";
+const API_BASE = `${apiUrl}/v1//session`;
 
 export async function startSession(): Promise<string> {
   const res = await axios.post<{ session_id: string }>(`${API_BASE}/start`);
