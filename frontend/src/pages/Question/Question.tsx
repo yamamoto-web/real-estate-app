@@ -45,7 +45,6 @@ export default function ChatQA() {
     },
   ];
   useEffect(() => {
-    console.log(apiUrl);
   const fetchIntro = async () => {
     try {
       const response = await axios.post<IntroResponse>(`${apiUrl}/v1/chat_intro`, {
