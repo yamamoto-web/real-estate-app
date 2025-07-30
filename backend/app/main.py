@@ -18,8 +18,9 @@ app.add_middleware(
     CORSMiddleware,
      allow_origins=[
         "http://localhost:5173",  # ローカル開発用
-        "https://real-estate-app-zeta-eight.vercel.app"  # ← 実機確認用URL
-        "https://real-estate-ffd0layq4-yamamoto-webs-projects.vercel.app"
+        "https://real-estate-app-zeta-eight.vercel.app", # ← 実機確認用URL
+        "https://real-estate-ffd0layq4-yamamoto-webs-projects.vercel.app",
+        "https://real-estate-app-g76z.onrender.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
