@@ -8,4 +8,4 @@ __pycache__/
 # 非公開ファイル
 .env.development
 .env.production
-.env.staging
+.env
