@@ -17,7 +17,7 @@ export default function Top() {
   }, []);
 
   return (
-    <main className="flex flex-col items-center justify-center w-full max-w-md mx-auto text-center space-y-6" style={{ minHeight: 'calc(var(--vh, 1vh) * 100 - 72px)' }}>
+    <main className="flex flex-col items-center justify-center w-full max-w-md mx-auto text-center px-5 grow min-h-[calc(100vh-96px)]">
       <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 leading-relaxed text-center">
         <span className="block">
           <span className="text-green-500">街</span>が変われば、<span className="text-green-500">暮らし</span>が変わる

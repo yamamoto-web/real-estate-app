@@ -1,4 +1,3 @@
-// import { Bars3Icon } from "@heroicons/react/24/outline"; // ★追加
 import logo from "../assets/machimatch-logo.png";
 
 export default function Header() {
