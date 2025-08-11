@@ -3,10 +3,15 @@ import { stages } from "@common/stages";
 
 export default function LifeStage() {
   const navigate = useNavigate();
-
   const handleSelect = (stageId: string) => {
     navigate(`/Conditions/Detail?stage=${stageId}`);
   };
+
+
+  const cardClass =
+    "w-full h-40 p-4 rounded-lg border border-gray-300 bg-white " +
+    "hover:shadow-md hover:bg-green-50 transition " +
+    "flex flex-col items-center justify-center text-center";
 
   return (
     <main className="min-h-screen max-w-md mx-auto p-4">
@@ -14,34 +19,21 @@ export default function LifeStage() {
         あなたの現在のライフステージを教えてください
       </h2>
 
-      {/* 上6つはグリッド */}
       <div className="grid grid-cols-2 gap-4 w-full">
-        {stages.slice(0, 6).map((stage) => (
-          <div key={stage.id} className="flex flex-col items-center">
-            <button
-              onClick={() => handleSelect(stage.id)}
-              className="p-4 rounded-lg border text-center w-full bg-white border-gray-300 hover:shadow-md hover:bg-green-50 transition"
-            >
-              <div className="text-2xl mb-1">{stage.icon}</div>
-              <div className="font-semibold">{stage.label}</div>
-            </button>
-            <div className="text-xs text-gray-500 mt-1">{stage.sub}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* その他はコンパクトに中央寄せ */}
-      <div className="mt-4 flex justify-center">
-        <div className="flex flex-col items-center">
+        {stages.map((stage) => (
           <button
-            onClick={() => handleSelect(stages[6].id)}
-            className="px-6 py-4 rounded-lg border text-center bg-white border-gray-300 hover:shadow-md hover:bg-green-50 transition"
+            key={stage.id}
+            onClick={() => handleSelect(stage.id)}
+            className={cardClass}
           >
-            <div className="text-2xl mb-1">{stages[6].icon}</div>
-            <div className="font-semibold">{stages[6].label}</div>
+            <div className="text-2xl mb-1">{stage.icon}</div>
+            <div className="font-semibold">{stage.label}</div>
+            {/* 補足もカード内に入れて高さを揃える。2行で省略 */}
+            <div className="mt-1 text-xs text-gray-500 line-clamp-2 overflow-hidden">
+              {stage.sub}
+            </div>
           </button>
-          <div className="text-xs text-gray-500 mt-1">{stages[6].sub}</div>
-        </div>
+        ))}
       </div>
     </main>
   );
