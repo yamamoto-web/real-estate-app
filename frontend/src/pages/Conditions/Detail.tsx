@@ -67,7 +67,7 @@ export default function Conditions() {
 
       {/* 年齢 */}
       <div className="mb-4">
-        <h3 className="font-semibold mb-2">年齢</h3>
+        <h3 className="font-semibold mb-2">年齢（必須）</h3>
         <div className="flex gap-2 flex-wrap">
           {renderButtons(["10代", "20代", "30代", "40代以上"], age, setAge)}
         </div>
@@ -86,7 +86,7 @@ export default function Conditions() {
         <h3 className="font-semibold mb-2">通勤・通学エリア</h3>
         <div className="flex gap-2 flex-wrap">
           {renderButtons(
-            ["東京23区", "東京都下", "神奈川東部", "千葉・埼玉"],
+            ["東京23区", "東京23区外", "神奈川東部", "神奈川西部", "千葉・埼玉", "未定"],
             area,
             setArea
           )}
