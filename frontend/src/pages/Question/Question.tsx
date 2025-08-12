@@ -27,6 +27,7 @@ export default function ChatQA() {
   const age = searchParams.get("age");
   const gender = searchParams.get("gender");
   const budget = searchParams.get("budget");
+  const plan = searchParams.get("plan");
   const time = searchParams.get("time");
   const priority = searchParams.get("priority")?.split(","); // カンマ区切り配列
   const stageLabel = getStageLabelById(stage); 
@@ -54,6 +55,7 @@ export default function ChatQA() {
         age,
         gender,
         budget,
+        plan,
         time,
         priority,    
       });
@@ -62,7 +64,7 @@ export default function ChatQA() {
       setMessages([
         {
           role: "ai",
-          text: `ライフステージ「${stage}」に合わせた街選びをしますね。\nこれからいくつか質問させてください！`,
+          text: `ライフステージ「${stageLabel}」に合わせた街選びをしますね。\nこれからいくつか質問させてください！`,
         },
       ]);
     }
@@ -104,6 +106,7 @@ export default function ChatQA() {
       age,
       gender,
       budget,
+      plan,
       time,
       priority,
     });

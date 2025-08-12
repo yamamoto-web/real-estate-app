@@ -14,6 +14,7 @@ def generate_intro(data):
     - 年齢：{data.age}
     - 性別：{data.gender}
     - 予算：{data.budget}
+    - 間取り：{data.plan}
     - 通勤時間：{data.time}
     - 優先事項：{', '.join(data.priority) if data.priority else 'なし'}
     """

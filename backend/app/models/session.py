@@ -29,6 +29,7 @@ class Answer(BaseModel):
     gender: str = ""
     area: str = ""
     time: str = ""
+    plan: str = ""
     budget: str = ""
     priority: List[str] = []
 
@@ -39,5 +40,6 @@ class IntroRequest(BaseModel):
     gender: str = ""
     area: str = ""
     time: str = ""
+    plan: str = ""
     budget: str = ""
     priority: List[str] = []

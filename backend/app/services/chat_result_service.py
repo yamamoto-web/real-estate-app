@@ -13,6 +13,7 @@ def generate_gpt_response(answer: Answer) -> dict:
 - 年齢：{answer.age}
 - 性別：{answer.gender}
 - 予算：{answer.budget}
+- 間取り{answer.plan}
 - 通勤時間：{answer.time}
 - 優先事項：{', '.join(answer.priority) if answer.priority else 'なし'}
 

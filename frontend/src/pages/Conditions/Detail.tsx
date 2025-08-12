@@ -12,6 +12,7 @@ export default function Conditions() {
   const [gender, setGender] = useState("");
   const [area, setArea] = useState("");
   const [time, setTime] = useState("");
+  const [plan, setplan] = useState("");
   const [budget, setBudget] = useState("");
   const [priority, setPriority] = useState<string[]>([]);
   const stageLabel = getStageLabelById(stage);
@@ -27,12 +28,12 @@ export default function Conditions() {
   };
 
   const handleNext = () => {
-    if (!age || !area || !time || !budget || priority.length === 0) {
+    if (!age || !area || !time || !plan || !budget || priority.length === 0) {
       alert("必須項目をすべて選択してください");
       return;
     }
     navigate(
-      `/Question?stage=${stage}&age=${age}&gender=${gender}&area=${area}&time=${time}&budget=${budget}&priority=${priority.join(",")}`
+      `/Question?stage=${stage}&age=${age}&gender=${gender}&area=${area}&time=${time}&plan=${plan}&budget=${budget}&priority=${priority.join(",")}`
     );
   };
 
@@ -82,7 +83,7 @@ export default function Conditions() {
 
       {/* エリア */}
       <div className="mb-4">
-        <h3 className="font-semibold mb-2">勤務・生活エリア</h3>
+        <h3 className="font-semibold mb-2">通勤・通学エリア</h3>
         <div className="flex gap-2 flex-wrap">
           {renderButtons(
             ["東京23区", "東京都下", "神奈川東部", "千葉・埼玉"],
@@ -96,7 +97,15 @@ export default function Conditions() {
       <div className="mb-4">
         <h3 className="font-semibold mb-2">通勤・通学時間</h3>
         <div className="flex gap-2 flex-wrap">
-          {renderButtons(["15分以内", "30分以内", "1時間以内"], time, setTime)}
+          {renderButtons(["15分以内", "30分以内", "1時間以内", "2時間以内"], time, setTime)}
+        </div>
+      </div>
+
+      {/* 間取り */}
+      <div className="mb-4">
+        <h3 className="font-semibold mb-2">間取り</h3>
+        <div className="flex gap-2 flex-wrap">
+          {renderButtons(["1R", "1K", "1DK", "1LDK", "2DK", "2LDK", "3DK", "3LDK"], plan, setplan)}
         </div>
       </div>
 
@@ -110,9 +119,9 @@ export default function Conditions() {
 
       {/* 優先条件 */}
       <div className="mb-4">
-        <h3 className="font-semibold mb-2">上位3件優先条件（必須）</h3>
+        <h3 className="font-semibold mb-2">優先したい地域の条件</h3>
         <div className="flex gap-2 flex-wrap">
-          {["駅近", "スーパーが近い", "治安が良い", "家賃が安い", "自然が多い"].map(
+          {["駅近", "スーパーが近い", "治安が良い", "家賃相場が安い", "自然が多い", "病院が近い"].map(
             (opt) => (
               <button
                 key={opt}
