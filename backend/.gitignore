@@ -6,6 +6,4 @@ __pycache__/
 *.pyc
 
 # 非公開ファイル
-.env.development
-.env.production
 .env
