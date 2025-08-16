@@ -1,39 +1,63 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useLocation } from "react-router-dom";
+/**
+ * 一問一答のコンテナコンポーネント（状態＆遷移の中核）。
+ * 役割:
+ *  - URLパラメータの取得と API への受け渡し
+ *  - イントロ取得（useIntroOnce）とチャット履歴の管理
+ *  - 質問の進行・回答処理・最終結果送信
+ * 責務分割:
+ *  - 表示: components/ChatMessages, components/QuickReplies
+ *  - 副作用: hooks/useIntroOnce
+ *  - 型: types.ts
+ * メモ:
+ *  - UI（JSX構造や className）は維持。内部ロジックだけ分離して見通しを向上。
+ */
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { getStageLabelById } from "@common/stageUtils";
-import axios from "axios";
-
-interface Question {
-  id: string;
-  text: string;
-  options: string[];
-}
-
-interface IntroResponse {
-  intro: string;
-}
+import { useIntroOnce } from "./hooks/useIntroOnce";
+import { ChatMessages } from "./components/ChatMessages";
+import { QuickReplies } from "./components/QuickReplies";
+import type { Msg, Question } from "./types";
 
 export default function ChatQA() {
-  const [messages, setMessages] = useState<{ role: "ai" | "user"; text: string }[]>([]);
-  const [currentQ, setCurrentQ] = useState<number>(0);
-  const [answers, setAnswers] = useState<{ [key: string]: string }>({});
-  const navigate = useNavigate();
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-
-  // URLのParamの取得(可読性が下がるため今後対応)
-  const stage = searchParams.get("stage") ?? "";
-  const age = searchParams.get("age");
-  const gender = searchParams.get("gender");
-  const budget = searchParams.get("budget");
-  const plan = searchParams.get("plan");
-  const time = searchParams.get("time");
-  const priority = searchParams.get("priority")?.split(","); // カンマ区切り配列
-  const stageLabel = getStageLabelById(stage); 
+  const nav = useNavigate();
+  const params = new URLSearchParams(useLocation().search);
+  const stage = params.get("stage") ?? "";
+  const age = params.get("age");
+  const gender = params.get("gender");
+  const budget = params.get("budget");
+  const plan = params.get("plan");
+  const time = params.get("time");
+  const area = params.get("area");
+  const priority = (params.get("priority") || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const stageLabel = getStageLabelById(stage);
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  const questions: Question[] = [
+  // --- 状態 ---
+  const [messages, setMessages] = useState<Msg[]>([]);
+  const [typing, setTyping] = useState(false);
+  const [currentQ, setCurrentQ] = useState(0);
+  const [weights, setWeights] = useState<Record<string, number>>({});
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollToBottom = () => bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+
+  // --- 質問（1問目は“最優先を決める”を動的生成） ---
+  const firstQuestion: Question | null = useMemo(
+    () =>
+      priority.length >= 2
+        ? {
+            id: "topPriority",
+            text: "この3つの中で、いちばん大事なのはどれですか？（あとで調整できます）",
+            options: priority.slice(0, 3),
+          }
+        : null,
+    [priority]
+  );
+
+  const baseQuestions: Question[] = [
     {
       id: "q1",
       text: "夜疲れて帰ってきたときに、コンビニやスーパーが近いほうがいいですか？",
@@ -45,119 +69,91 @@ export default function ChatQA() {
       options: ["はい", "どちらでもよい", "いいえ"],
     },
   ];
-  useEffect(() => {
-  const fetchIntro = async () => {
-    console.log(apiUrl);
-    try {
-      const response = await axios.post<IntroResponse>(`${apiUrl}/v1/chat_intro`, {
-        stage,
-        stageLabel,
-        age,
-        gender,
-        budget,
-        plan,
-        time,
-        priority,    
-      });
-      setMessages([{ role: "ai", text: response.data.intro }]);
-    } catch {
-      setMessages([
-        {
-          role: "ai",
-          text: `ライフステージ「${stageLabel}」に合わせた街選びをしますね。\nこれからいくつか質問させてください！`,
-        },
-      ]);
-    }
-  };
-  fetchIntro();
-}, []);
+  const questions: Question[] = firstQuestion ? [firstQuestion, ...baseQuestions] : baseQuestions;
 
+  // --- イントロ＋1問目の自動表示（StrictMode 対策込み） ---
+  useIntroOnce({
+    apiUrl,
+    payload: { stage, stageLabel, age, gender, budget, plan, time, area, priority },
+    firstQuestionText: questions[0]?.text,
+    onIntro: (intro) => setMessages([{ role: "ai", text: intro }]),
+    onShowFirstQuestion: (text) => setMessages((prev) => [...prev, { role: "ai", text }]),
+    onTyping: setTyping,
+    scrollToBottom,
+  });
+
+  // --- 回答処理 ---
   const handleAnswer = (answer: string) => {
     const q = questions[currentQ];
-    setAnswers({ ...answers, [q.id]: answer });
-
     setMessages((prev) => [...prev, { role: "user", text: answer }]);
 
+    // 1問目で重みを決定（1位=3 / 残り=2,1）
+    if (q.id === "topPriority" && firstQuestion) {
+      const top = answer;
+      const rest = firstQuestion.options.filter((o) => o !== top);
+      setWeights({
+        [top]: 3,
+        ...(rest[0] && { [rest[0]]: 2 }),
+        ...(rest[1] && { [rest[1]]: 1 }),
+      });
+    }
+
     if (currentQ + 1 < questions.length) {
-      setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          { role: "ai", text: questions[currentQ + 1].text },
-        ]);
-      }, 500);
+      setTimeout(
+        () => setMessages((prev) => [...prev, { role: "ai", text: questions[currentQ + 1].text }]),
+        400
+      );
       setCurrentQ(currentQ + 1);
     } else {
-      setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          { role: "ai", text: "お疲れ様でした。これでヒアリングは完了です。" },
-        ]);
-      }, 500);
-        // 質問終了後に+1して終了状態にする
-        setCurrentQ(currentQ + 1);
+      setTimeout(
+        () => setMessages((prev) => [...prev, { role: "ai", text: "お疲れ様でした。これでヒアリングは完了です。" }]),
+        400
+      );
+      setCurrentQ(currentQ + 1);
     }
   };
 
+  // --- 最終結果 ---
   const handleFinalResult = async () => {
-     try {
-    const response = await axios.post(`${apiUrl}/v1/result`, {
-      stage,
-      stageLabel,
-      age,
-      gender,
-      budget,
-      plan,
-      time,
-      priority,
-    });
-    navigate("/Result", { state: response.data });
-    } catch (error) {
-      console.error("最終結果取得エラー: ", error);
+    try {
+      const res = await fetch(`${apiUrl}/v1/result`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          stage,
+          stageLabel,
+          age,
+          gender,
+          budget,
+          plan,
+          time,
+          area,
+          priority,
+          weights,
+        }),
+      });
+      const data = await res.json();
+      nav("/Result", { state: data });
+    } catch (e) {
+      console.error("最終結果取得エラー:", e);
     }
   };
+
+  // --- スクロール追随 ---
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, typing]);
 
   return (
     <main className="min-h-screen max-w-md mx-auto p-4">
-      <h2 className="text-lg font-bold text-gray-800 text-center mb-4">
-        AI相談
-      </h2>
-      <p className="text-sm text-gray-500 text-center mb-4">
-        （ライフステージ：{stageLabel}）
-      </p>
+      <h2 className="text-lg font-bold text-gray-800 text-center mb-4">AI相談</h2>
+      <p className="text-sm text-gray-500 text-center mb-4">（ライフステージ：{stageLabel}）</p>
 
-      {/* チャット履歴 */}
-      <div className="space-y-2 border rounded p-2 mb-4 bg-gray-50 h-[60vh] overflow-y-auto">
-        {messages.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`p-2 rounded-lg max-w-[80%] ${
-              msg.role === "ai"
-                ? "bg-white text-left"
-                : "bg-green-100 text-right ml-auto"
-            }`}
-            >
-            {msg.text}
-          </div>
-        ))}
-      </div>
+      <ChatMessages messages={messages} typing={typing} ref={bottomRef} />
 
-      {/* 質問選択肢 */}
-      {currentQ < questions.length && (
-        <div className="flex gap-2 flex-wrap">
-          {questions[currentQ].options.map((opt) => (
-            <button
-              key={opt}
-              onClick={() => handleAnswer(opt)}
-              className="px-4 py-2 rounded-lg border bg-white hover:bg-green-50"
-            >
-              {opt}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* 最終結果ボタン */}
-      {currentQ >= questions.length && (
+      {currentQ < questions.length ? (
+        <QuickReplies options={questions[currentQ].options} onSelect={handleAnswer} />
+      ) : (
         <button
           onClick={handleFinalResult}
           className="mt-2 w-full bg-blue-400 hover:bg-blue-500 text-white font-bold rounded-lg py-2"

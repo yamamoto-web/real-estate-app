@@ -17,11 +17,13 @@ def generate_intro(data):
     hubs = AREA_HUBS.get(data.area, [])
     hub_hint = "・".join(hubs) if hubs else "新宿・渋谷・東京・横浜などの都心"
 
-    prompt = f"""
-    あなたは親しみやすい女性の不動産営業マンです。
-    以下の条件のユーザーに、50文字程度で寄り添うような口調で状況をまとめてください。
-    最後に「では、いくつか質問させてくださいね」と言ってください。
+    system = (
+        "あなたは親しみやすい女性の『街・沿線選びアドバイザー』です。"
+        "出力は地域・沿線・駅エリアに限定し、住宅や契約の話題は一切出しません。"
+    )
 
+    prompt = f"""
+    目的：地域診断（街・沿線の仮説提示）。物件の話は禁止。
 
     【ユーザー条件】
     - ライフステージ：{data.stageLabel}
@@ -32,15 +34,22 @@ def generate_intro(data):
     - 通勤時間：{data.time}
     - 優先事項：{', '.join(data.priority) if data.priority else 'なし'}
     - エリアカテゴリ：{data.area}（代表例：{hub_hint}）
+
+    [出力仕様]
+    - 50〜100字で“地域の観点だけ”をまとめた寄り添い文。
+    - 続けて1文だけ「現在の情報では◯◯線の△△〜□□が合いそう」の形式で沿線・方角を示す。
+    - 最後は必ず「では、いくつか質問させてくださいね」で締める。
+    - 使ってよい話題：沿線/駅/街の雰囲気/買い物利便/治安/公園/アクセス。
+    - 箇条書き・注意書き・免責は不要。2〜3文で自然に。
     """
 
     completion = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": "あなたは親しみやすい女性の不動産営業マンです。"},
+            {"role": "system", "content": system},
             {"role": "user", "content": prompt}
         ],
-        temperature=0.7
+        temperature=0.2
     )
 
     return completion.choices[0].message.content
