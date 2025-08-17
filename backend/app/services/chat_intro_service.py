@@ -1,5 +1,5 @@
 from openai import OpenAI
-from typing import List, Any
+from typing import List
 
 client = OpenAI()
 
