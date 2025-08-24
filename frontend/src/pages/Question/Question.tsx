@@ -43,14 +43,32 @@ export default function ChatQA() {
   const [weights, setWeights] = useState<Record<string, number>>({});
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollToBottom = () => bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  const timers = useRef<number[]>([]);
 
-  // --- 質問（1問目は“最優先を決める”を動的生成） ---
+  const speak = (text: string, delay = 400) => {
+  setTyping(true);
+  const id = window.setTimeout(() => {
+    setMessages((prev) => [...prev, { role: "ai", text }]);
+    setTyping(false);
+  }, delay);
+  timers.current.push(id);
+  };
+  
+  // アンマウント時にタイマー解除
+  useEffect(() => {
+    return () => {
+      timers.current.forEach((id) => clearTimeout(id));
+    };
+  }, []);
+
+  // --- 質問事項一覧---
+  // 1問目は“最優先を決める”を動的生成
   const firstQuestion: Question | null = useMemo(
     () =>
       priority.length >= 2
         ? {
             id: "topPriority",
-            text: "この3つの中で、いちばん大事なのはどれですか？（あとで調整できます）",
+            text: "この3つの中で、いちばん大事なのはどれですか？",
             options: priority.slice(0, 3),
           }
         : null,
@@ -70,6 +88,7 @@ export default function ChatQA() {
     },
   ];
   const questions: Question[] = firstQuestion ? [firstQuestion, ...baseQuestions] : baseQuestions;
+  // --- 質問事項一覧---------ここまで-------
 
   // --- イントロ＋1問目の自動表示（StrictMode 対策込み） ---
   useIntroOnce({
@@ -97,19 +116,13 @@ export default function ChatQA() {
         ...(rest[1] && { [rest[1]]: 1 }),
       });
     }
-
-    if (currentQ + 1 < questions.length) {
-      setTimeout(
-        () => setMessages((prev) => [...prev, { role: "ai", text: questions[currentQ + 1].text }]),
-        400
-      );
-      setCurrentQ(currentQ + 1);
+  //回答時に「入力中...」を表示し、次の質問を少し遅延して表示
+     if (currentQ + 1 < questions.length) {
+      setCurrentQ((i) => i + 1);
+      speak(questions[currentQ + 1].text); 
     } else {
-      setTimeout(
-        () => setMessages((prev) => [...prev, { role: "ai", text: "お疲れ様でした。これでヒアリングは完了です。" }]),
-        400
-      );
-      setCurrentQ(currentQ + 1);
+      setCurrentQ((i) => i + 1);
+      speak("お疲れ様でした。これでヒアリングは完了です。"); 
     }
   };
 
